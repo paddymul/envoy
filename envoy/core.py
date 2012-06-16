@@ -15,7 +15,8 @@ import subprocess
 import threading
 import pdb
 import extproc
-
+import time
+import datetime
 __version__ = '0.0.2'
 __license__ = 'MIT'
 __author__ = 'Kenneth Reitz'
@@ -56,7 +57,7 @@ class Command(object):
         self.data = data
         environ = dict(os.environ)
         environ.update(env or {})
-
+        after_communicate = ["First set"]
         def target():
 
             self.process = subprocess.Popen(self.cmd,
@@ -75,10 +76,8 @@ class Command(object):
             else:
                 self.out, self.err = self.process.communicate(self.data)
 
-
         thread = threading.Thread(target=target)
         thread.start()
-
         thread.join(timeout)
         if _is_alive(thread) :
             _terminate_process(self.process)
@@ -224,7 +223,7 @@ def run2(command, data=None, timeout=None, kill_timeout=None, env=None):
 
 
 
-def run_extproc(command, data=None, timeout=None, kill_timeout=None, env=None):
+def run_extproc(command, data=None, timeout=None, kill_timeout=0, env=None):
     ext_cmds = []
     for command_args in expand_args(command):
         cmd = extproc.Cmd(command_args, e=env)
@@ -236,7 +235,7 @@ def run_extproc(command, data=None, timeout=None, kill_timeout=None, env=None):
         new_cmds.extend(ext_cmds)
         ext_cmds = new_cmds
     pi = extproc.Pipe(*ext_cmds, data=data, e=env)
-    capture_obj = pi.capture(1,2)
+    capture_obj = pi.capture(1,2, timeout=timeout, kill_timeout=kill_timeout)
     return wrap_extproc_Capture(capture_obj)
 
 def run(command, data=None, timeout=None, kill_timeout=None, env=None):

@@ -36,6 +36,20 @@ class SimpleTest(unittest.TestCase):
         self.assertEqual(r.std_out, 'y\ny\ny\ny\ny\ny\ny\ny\ny\ny\n')
         self.assertEqual(r.status_code, 0)
 
+        r = envoy.run_extproc('yes | head -n 10')
+        self.assertEqual(r.std_out, 'y\ny\ny\ny\ny\ny\ny\ny\ny\ny\n')
+        self.assertEqual(r.status_code, 0)
+
+        r = envoy.run_extproc('yes | head -n 10', timeout=1)
+        self.assertEqual(r.std_out, 'y\ny\ny\ny\ny\ny\ny\ny\ny\ny\n')
+        self.assertEqual(r.status_code, 0)
+
+
+        # if timeout isn't implemented properly, the test suite will
+        # never terminate
+        #r = envoy.run('yes ', timeout=1)
+
+
     def test_quoted_args(self):
         sentinel = 'quoted_args' * 3
         r = envoy.run("python -c 'print \"%s\"'" % sentinel)
