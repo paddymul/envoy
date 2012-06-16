@@ -1,5 +1,6 @@
 import unittest
 import envoy
+import pdb
 
 class SimpleTest(unittest.TestCase):
 
@@ -15,6 +16,10 @@ class SimpleTest(unittest.TestCase):
         r = envoy.run2("echo -n 'hi'| tr [:lower:] [:upper:]")
         self.assertEqual(r.std_out, "HI")
         self.assertEqual(r.status_code, 0)
+        r = envoy.run_extproc("echo -n 'hi'| tr [:lower:] [:upper:]")
+        self.assertEqual(r.std_out, "HI")
+        self.assertEqual(r.status_code, 0)
+
 
     def test_expand_args(self):
         self.assertEquals(

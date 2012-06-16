@@ -13,7 +13,7 @@ import shlex
 import signal
 import subprocess
 import threading
-
+import extproc
 
 __version__ = '0.0.2'
 __license__ = 'MIT'
@@ -69,11 +69,11 @@ class Command(object):
             )
             if sys.version_info[0] >= 3:
                 self.out, self.err = self.process.communicate(
-                    input = bytes(self.data, "UTF-8") if self.data else None 
+                    input = bytes(self.data, "UTF-8") if self.data else None
                 )
             else:
                 self.out, self.err = self.process.communicate(self.data)
-              
+
 
         thread = threading.Thread(target=target)
         thread.start()
@@ -160,6 +160,12 @@ class Response(object):
         else:
             return '<Response>'
 
+def wrap_extproc_Capture(capture_obj):
+    r = Response()
+    r.std_out = capture_obj.stdout.read()
+    r.std_err = capture_obj.stderr.read()
+    r.status_code = capture_obj.exit_status
+    return r
 
 def expand_args(command):
     """Parses command strings and returns a Popen-ready list."""
@@ -182,6 +188,70 @@ def expand_args(command):
 
     return command
 
+import pdb
+
+def parse_to_commands(command):
+    command = expand_args(command)
+    history = []
+    cmds = []
+    for c in command:
+        cmds.append(Command(c))
+    return cmds
+
+
+def run2(command, data=None, timeout=None, kill_timeout=None, env=None):
+    history = []
+    for cmd in parse_to_commands(command):
+
+        if len(history):
+            # due to broken pipe problems pass only first 10MB
+            data = history[-1].std_out[0:10*1024]
+
+        out, err = cmd.run(data, timeout, kill_timeout, env)
+
+        r = Response(process=cmd)
+
+        r.command = cmd.cmd
+        r.std_out = out
+        r.std_err = err
+        r.status_code = cmd.returncode
+        history.append(r)
+    r = history.pop()
+    r.history = history
+    return r
+
+
+
+
+def run_extproc(command, data=None, timeout=None, kill_timeout=None, env=None):
+    ext_cmds = []
+    for command_args in expand_args(command):
+        cmd = extproc.Cmd(command_args, e=env)
+        ext_cmds.append(cmd)
+    pi = extproc.Pipe(*ext_cmds, e=env)
+
+    return wrap_extproc_Capture(pi.capture(1,2))
+
+
+class ExtProcResponse(object):
+    """A command's response"""
+
+    def __init__(self, process=None):
+        super(Response, self).__init__()
+
+        self._process = process
+        self.command = None
+        self.std_err = None
+        self.std_out = None
+        self.status_code = None
+        self.history = []
+
+
+    def __repr__(self):
+        if len(self.command):
+            return '<Response [{0}]>'.format(self.command[0])
+        else:
+            return '<Response>'
 
 def run(command, data=None, timeout=None, kill_timeout=None, env=None):
     """Executes a given commmand and returns Response.
@@ -190,7 +260,6 @@ def run(command, data=None, timeout=None, kill_timeout=None, env=None):
     """
 
     command = expand_args(command)
-
     history = []
     for c in command:
 
