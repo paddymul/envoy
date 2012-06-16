@@ -21,12 +21,12 @@ class SimpleTest(unittest.TestCase):
             envoy.expand_args("echo -n 'hi'| tr [:lower:] [:upper:]"),
             [['echo', '-n', 'hi'], ['tr', '[:lower:]', '[:upper:]']])
 
-    def _test_timeout(self):
+    def test_timeout(self):
         r = envoy.run('yes | head', timeout=1)
         self.assertEqual(r.std_out, 'y\ny\ny\ny\ny\ny\ny\ny\ny\ny\n')
         self.assertEqual(r.status_code, 0)
 
-    def _test_quoted_args(self):
+    def test_quoted_args(self):
         sentinel = 'quoted_args' * 3
         r = envoy.run("python -c 'print \"%s\"'" % sentinel)
         self.assertEqual(r.std_out.rstrip(), sentinel)
