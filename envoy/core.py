@@ -13,6 +13,7 @@ import shlex
 import signal
 import subprocess
 import threading
+import pdb
 import extproc
 
 __version__ = '0.0.2'
@@ -188,7 +189,7 @@ def expand_args(command):
 
     return command
 
-import pdb
+
 
 def parse_to_commands(command):
     command = expand_args(command)
@@ -231,27 +232,6 @@ def run_extproc(command, data=None, timeout=None, kill_timeout=None, env=None):
     pi = extproc.Pipe(*ext_cmds, e=env)
 
     return wrap_extproc_Capture(pi.capture(1,2))
-
-
-class ExtProcResponse(object):
-    """A command's response"""
-
-    def __init__(self, process=None):
-        super(Response, self).__init__()
-
-        self._process = process
-        self.command = None
-        self.std_err = None
-        self.std_out = None
-        self.status_code = None
-        self.history = []
-
-
-    def __repr__(self):
-        if len(self.command):
-            return '<Response [{0}]>'.format(self.command[0])
-        else:
-            return '<Response>'
 
 def run(command, data=None, timeout=None, kill_timeout=None, env=None):
     """Executes a given commmand and returns Response.
