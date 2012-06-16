@@ -56,6 +56,10 @@ class SimpleTest(unittest.TestCase):
         self.assertEqual(r.std_out.rstrip(), sentinel)
         self.assertEqual(r.status_code, 0)
 
+        r = envoy.run_extproc("python -c 'print \"%s\"'" % sentinel)
+        self.assertEqual(r.std_out.rstrip(), sentinel)
+        self.assertEqual(r.status_code, 0)
+
 class ConnectedCommandTests(unittest.TestCase):
 
     def test_status_code(self):
