@@ -9,6 +9,11 @@ class SimpleTest(unittest.TestCase):
         self.assertEqual(r.std_out.rstrip(), "HI")
         self.assertEqual(r.status_code, 0)
 
+        r = envoy.run_extproc("sed s/i/I/g", "Hi")
+        self.assertEqual(r.std_out.rstrip(), "HI")
+        self.assertEqual(r.status_code, 0)
+
+
     def test_pipe(self):
         r = envoy.run("echo -n 'hi'| tr [:lower:] [:upper:]")
         self.assertEqual(r.std_out, "HI")

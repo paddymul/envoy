@@ -229,9 +229,15 @@ def run_extproc(command, data=None, timeout=None, kill_timeout=None, env=None):
     for command_args in expand_args(command):
         cmd = extproc.Cmd(command_args, e=env)
         ext_cmds.append(cmd)
-    pi = extproc.Pipe(*ext_cmds, e=env)
-
-    return wrap_extproc_Capture(pi.capture(1,2))
+    if data:
+        # the python fork decorator lets us express data in terms of
+        # another function, much simpler than mucking about with files
+        new_cmds = [extproc.make_echoer(data)]
+        new_cmds.extend(ext_cmds)
+        ext_cmds = new_cmds
+    pi = extproc.Pipe(*ext_cmds, data=data, e=env)
+    capture_obj = pi.capture(1,2)
+    return wrap_extproc_Capture(capture_obj)
 
 def run(command, data=None, timeout=None, kill_timeout=None, env=None):
     """Executes a given commmand and returns Response.
