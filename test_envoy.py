@@ -66,5 +66,8 @@ class ConnectedCommandTests(unittest.TestCase):
         c = envoy.connect("sleep 5")
         self.assertEqual(c.status_code, None)
 
+        c = envoy.connect_extproc("sleep 5")
+        self.assertEqual(c.status_code, None)
+
 if __name__ == "__main__":
     unittest.main()

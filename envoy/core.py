@@ -238,6 +238,43 @@ def run_extproc(command, data=None, timeout=None, kill_timeout=0, env=None):
     capture_obj = pi.capture(1,2, timeout=timeout, kill_timeout=kill_timeout)
     return wrap_extproc_Capture(capture_obj)
 
+class ExtResponse(object):
+
+    def __init__(self, pipe_obj):
+        self.pipe_obj = pipe_obj
+
+    @property
+    def status_code(self):
+        return self.pipe_obj.returncode
+
+    @property
+    def std_out(self):
+        if self.status_code:
+            return self.pipe_obj.fd_objs[1].read()
+
+    @property
+    def std_err(self):
+        if self.status_code:
+            return self.pipe_obj.fd_objs[2].read()
+
+def connect_extproc(command, data=None, env=None):
+    """Spawns a new process from the given command."""
+
+    ext_cmds = []
+    for command_args in expand_args(command):
+        cmd = extproc.Cmd(command_args, e=env)
+        ext_cmds.append(cmd)
+    if data:
+        # the python fork decorator lets us express data in terms of
+        # another function, much simpler than mucking about with files
+        new_cmds = [extproc.make_echoer(data)]
+        new_cmds.extend(ext_cmds)
+        ext_cmds = new_cmds
+    pi = extproc.Pipe(*ext_cmds, data=data, e=env)
+    capture_obj = pi.spawn()
+    return ExtResponse(pi)
+
+
 def run(command, data=None, timeout=None, kill_timeout=None, env=None):
     """Executes a given commmand and returns Response.
 
@@ -279,13 +316,13 @@ def connect(command, data=None, env=None):
     environ.update(env or {})
 
     process = subprocess.Popen(command_str,
-        universal_newlines=True,
-        shell=False,
-        env=environ,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        bufsize=0,
-    )
+                               universal_newlines=True,
+                               shell=False,
+                               env=environ,
+                               stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                               bufsize=0,
+                               )
 
     return ConnectedCommand(process=process)
