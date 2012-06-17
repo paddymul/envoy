@@ -159,17 +159,8 @@ class Response(object):
             return '<Response [{0}]>'.format(self.command[0])
         else:
             return '<Response>'
-
-def wrap_extproc_Capture(capture_obj):
-    r = Response()
-    r.std_out = capture_obj.stdout.read()
-    r.std_err = capture_obj.stderr.read()
-    r.status_code = capture_obj.exit_status
-    return r
-
 def expand_args(command):
     """Parses command strings and returns a Popen-ready list."""
-
     # Prepare arguments.
     if isinstance(command, str):
         splitter = shlex.shlex(command)
@@ -188,41 +179,6 @@ def expand_args(command):
 
     return command
 
-
-
-def parse_to_commands(command):
-    command = expand_args(command)
-    history = []
-    cmds = []
-    for c in command:
-        cmds.append(Command(c))
-    return cmds
-
-
-def run2(command, data=None, timeout=None, kill_timeout=None, env=None):
-    history = []
-    for cmd in parse_to_commands(command):
-
-        if len(history):
-            # due to broken pipe problems pass only first 10MB
-            data = history[-1].std_out[0:10*1024]
-
-        out, err = cmd.run(data, timeout, kill_timeout, env)
-
-        r = Response(process=cmd)
-
-        r.command = cmd.cmd
-        r.std_out = out
-        r.std_err = err
-        r.status_code = cmd.returncode
-        history.append(r)
-    r = history.pop()
-    r.history = history
-    return r
-
-
-
-
 def run_extproc(command, data=None, timeout=None, kill_timeout=0, env=None):
     ext_cmds = []
     for command_args in expand_args(command):
@@ -238,24 +194,15 @@ def run_extproc(command, data=None, timeout=None, kill_timeout=0, env=None):
     capture_obj = pi.capture(1,2, timeout=timeout, kill_timeout=kill_timeout)
     return wrap_extproc_Capture(capture_obj)
 
-class ExtResponse(object):
 
-    def __init__(self, pipe_obj):
-        self.pipe_obj = pipe_obj
+def wrap_extproc_Capture(capture_obj):
+    r = Response()
+    r.std_out = capture_obj.stdout.read()
+    r.std_err = capture_obj.stderr.read()
+    r.status_code = capture_obj.exit_status
+    return r
 
-    @property
-    def status_code(self):
-        return self.pipe_obj.returncode
 
-    @property
-    def std_out(self):
-        if self.status_code:
-            return self.pipe_obj.fd_objs[1].read()
-
-    @property
-    def std_err(self):
-        if self.status_code:
-            return self.pipe_obj.fd_objs[2].read()
 
 class ExtLiveCaptureWrap(object):
     def __init__(self, live_capture_obj):

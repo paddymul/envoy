@@ -14,14 +14,11 @@ class SimpleTest(unittest.TestCase):
         self.assertEqual(r.std_out.rstrip(), "HI")
         self.assertEqual(r.status_code, 0)
 
-
     def test_pipe(self):
         r = envoy.run("echo -n 'hi'| tr [:lower:] [:upper:]")
         self.assertEqual(r.std_out, "HI")
         self.assertEqual(r.status_code, 0)
-        r = envoy.run2("echo -n 'hi'| tr [:lower:] [:upper:]")
-        self.assertEqual(r.std_out, "HI")
-        self.assertEqual(r.status_code, 0)
+
         r = envoy.run_extproc("echo -n 'hi'| tr [:lower:] [:upper:]")
         self.assertEqual(r.std_out, "HI")
         self.assertEqual(r.status_code, 0)
@@ -48,8 +45,8 @@ class SimpleTest(unittest.TestCase):
 
         # if timeout isn't implemented properly, the test suite will
         # never terminate
-        #r = envoy.run('yes ', timeout=1)
-
+        r = envoy.run('yes ', timeout=1)
+        r = envoy.run_extproc('yes', timeout=1)
 
     def test_quoted_args(self):
         sentinel = 'quoted_args' * 3
