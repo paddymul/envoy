@@ -257,6 +257,22 @@ class ExtResponse(object):
         if self.status_code:
             return self.pipe_obj.fd_objs[2].read()
 
+class ExtLiveCaptureWrap(object):
+    def __init__(self, live_capture_obj):
+        self.live_capture_obj = live_capture_obj
+
+    @property
+    def status_code(self):
+        return self.live_capture_obj.returncode
+
+    @property
+    def std_out(self):
+        return self.live_capture_obj.stdout
+
+    @property
+    def std_err(self):
+        return self.live_capture_obj.stderr
+
 def connect_extproc(command, data=None, env=None):
     """Spawns a new process from the given command."""
 
@@ -271,8 +287,8 @@ def connect_extproc(command, data=None, env=None):
         new_cmds.extend(ext_cmds)
         ext_cmds = new_cmds
     pi = extproc.Pipe(*ext_cmds, data=data, e=env)
-    capture_obj = pi.spawn()
-    return ExtResponse(pi)
+    #capture_obj = pi.spawn()
+    return ExtLiveCaptureWrap(pi.capture_spawn())
 
 
 def run(command, data=None, timeout=None, kill_timeout=None, env=None):

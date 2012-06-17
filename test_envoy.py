@@ -1,5 +1,6 @@
 import unittest
 import envoy
+import time
 import pdb
 
 class SimpleTest(unittest.TestCase):
@@ -68,6 +69,12 @@ class ConnectedCommandTests(unittest.TestCase):
 
         c = envoy.connect_extproc("sleep 5")
         self.assertEqual(c.status_code, None)
+
+        ab = envoy.connect_extproc("echo 'hi'")
+        time.sleep(1)
+
+        self.assertEqual(ab.status_code, 0)
+        self.assertEqual(ab.std_out, 'hi\n')
 
 if __name__ == "__main__":
     unittest.main()
